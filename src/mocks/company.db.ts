@@ -51,7 +51,6 @@ export class CompanyDB {
   getCompanyById(id: string): Company | undefined {
     const companies: Collection<Company> = this.db.getCollection('companies');
     const result = companies.findOne({ id: id });
-    // TODO: Handle null result
     return result as Company;
   }
 }

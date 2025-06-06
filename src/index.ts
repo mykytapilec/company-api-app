@@ -21,7 +21,7 @@ app.use(express.json());
 companyPostingsRouter.get('/company-postings', companyPostingsController.get);
 companyPostingsRouter.post('/company-postings', companyPostingsController.post);
 
-app.use(companyPostingsRouter);
+app.use('/', companyPostingsRouter);
 
 app.listen(port, () => {
   console.log(`⚡️[server]: Server is running at http://localhost:${port}`);

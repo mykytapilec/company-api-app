@@ -1,38 +1,64 @@
 import { CompanyDB } from '../mocks/company.db';
 import axios from 'axios';
 
+interface Posting {
+  companyId: string;
+  freight: {
+    weightPounds: number;
+    equipmentType: string;
+    fullPartial: string;
+    lengthFeet: number;
+  };
+}
+
+interface PostingResponse {
+  companyName: string;
+  freight: {
+    weightPounds: number;
+    equipmentType: string;
+    fullPartial: string;
+    lengthFeet: number;
+  };
+}
+
 export class CompanyPostingsService {
   constructor(private readonly companyDB: CompanyDB) {}
 
-  async getCompanyPostings(equipmentType?: string, fullPartial?: string) {
+  async getCompanyPostings(equipmentType?: string, fullPartial?: string): Promise<PostingResponse[]> {
     try {
       const response = await axios.get('http://localhost:3000/postings');
-      const postings = response.data;
+      const postings = response.data as Posting[];
 
       let filteredPostings = postings;
       if (equipmentType) {
         filteredPostings = filteredPostings.filter(
-          (posting: any) => posting.freight.equipmentType === equipmentType
+          (posting) => posting.freight.equipmentType === equipmentType
         );
       }
       if (fullPartial) {
         filteredPostings = filteredPostings.filter(
-          (posting: any) => posting.freight.fullPartial === fullPartial
+          (posting) => posting.freight.fullPartial === fullPartial
         );
       }
 
-      return filteredPostings.map((posting: any) => {
-        const company = this.companyDB.getCompanyById(posting.companyId);
-        return {
-          companyName: company?.name,
-          freight: {
-            weightPounds: posting.freight.weightPounds,
-            equipmentType: posting.freight.equipmentType,
-            fullPartial: posting.freight.fullPartial,
-            lengthFeet: posting.freight.lengthFeet
+      return filteredPostings
+        .map((posting) => {
+          const company = this.companyDB.getCompanyById(posting.companyId);
+          if (!company) {
+            return null;
           }
-        };
-      });
+          
+          return {
+            companyName: company.name,
+            freight: {
+              weightPounds: posting.freight.weightPounds,
+              equipmentType: posting.freight.equipmentType,
+              fullPartial: posting.freight.fullPartial,
+              lengthFeet: posting.freight.lengthFeet
+            }
+          };
+        })
+        .filter((posting): posting is PostingResponse => posting !== null);
     } catch (error) {
       throw new Error('Failed to fetch postings');
     }
